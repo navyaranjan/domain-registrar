@@ -2,6 +2,11 @@
 
 This is a cli application that can be used to calculate the total cost of domain ownership for a business/person based on a pre-defined (configurable) cost dataset.
 
+The application depends on the following libraries:
+* [FasterXML Jackson Databind](https://github.com/FasterXML/jackson-databind)
+* [Johnrengleman Shadow](https://github.com/johnrengelman/shadow)
+* [Google Guava](https://github.com/google/guava)
+
 ## Pre-requisites
 
 * Java JDK 1.8+ (dev)
