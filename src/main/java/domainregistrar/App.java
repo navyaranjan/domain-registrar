@@ -1,12 +1,8 @@
 package domainregistrar;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,101 +36,114 @@ public class App {
 
         // Parse options
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
-
-        // Help Formatter to print help messages
+        CommandLine cmd;
         HelpFormatter formatter = new HelpFormatter();
+        try {
+            cmd = parser.parse(options, args);
 
-        if (cmd.hasOption("h")) {
-            formatter.printHelp("java -jar domain-registrar-all.jar", options);
-        } else if (cmd.hasOption("f")) {
-            String domainFile = cmd.getOptionValue("f");
+            if (cmd.hasOption("h")) {
 
-            addNewDomainSuffix();
-            registration(domainFile);
-        } else {
-            formatter.printHelp("java -jar domain-registrar-all.jar", options);
+                formatter.printHelp("java -jar domain-registrar-all.jar", options);
+
+            } else if (cmd.hasOption("f")) {
+                parseDomainCostList();
+                String domainFile = cmd.getOptionValue("f");
+                registration(domainFile);
+
+            } else {
+
+                formatter.printHelp("java -jar domain-registrar-all.jar", options);
+            }
+        } catch (Exception e) {
+            System.out.println("CommandLine Argument Missing. Aborting!");
         }
-
-        // System.out.println("\nDomain registrar's price list (per year) of domain
-        // registration per in a zone");
-        // System.out.println("========================================");
-        // printPriceList(Type.NORMAL);
-        // System.out.println("\nDomain registrar's price list (per year) of premium
-        // domain registrations");
-        // System.out.println("========================================");
-        // printPriceList(Type.PREMIUM);
-        // // if (args[0] != null)
-        // registration(args[0]);
-
     }
 
-    public static void printPriceList(Type type) {
-
-        domainTypes.stream().filter(typ -> typ.getType().equals(type))
-                .forEach(typ -> System.out.println(typ.getDomain() + " - " + typ.getPrice()));
-
-    }
-
-    public static void addNewDomainSuffix() {
+    // method for parsing domain cost list from json file to List using Jackson
+    public static void parseDomainCostList() {
         ObjectMapper mapper = new ObjectMapper();
         try {
             InputStream stream = App.class.getResourceAsStream("/domaintypes.json");
             domainTypes = Arrays.asList(mapper.readValue(stream, DomainType[].class));
-            // domainTypes.stream().forEach(x -> System.out.println(x.getDomain()));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.out.println("Error reading from the cost backend. FileNotFound Exception. Aborting!");
         } catch (JsonMappingException e) {
-
-            e.printStackTrace();
+            System.out.println("Could not read from the cost backend. JsonMappingException.Aborting!");
         } catch (IOException e) {
-
-            e.printStackTrace();
+            System.out.println("Could not read from the cost backend. IOException. Aborting!");
         }
 
     }
 
-    public static void registration(String str) {
-        Double totalPrice = 0.0;
-        Reader reader;
-        CSVParser csvParser;
+    // method for user's domain registration
+    public static void registration(String requestFilePath) {
+        Double totalCost = 0.0;
         Map<String, Integer> domains = new HashMap<>();
+
+        // Parsing the request CSV file using CSV Parser
         try {
-            reader = Files.newBufferedReader(Paths.get(str));
-            csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
+            Reader reader = Files.newBufferedReader(Paths.get(requestFilePath));
+            CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
             for (CSVRecord csvRecord : csvParser) {
                 domains.put(csvRecord.get(0), Integer.parseInt(csvRecord.get(1)));
-                System.out.println(csvRecord.get(0));
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println(e);
         }
 
+        // Map for premium domains
         Map<String, Double> premium = domainTypes.stream().filter(typ -> typ.getType().equals(Type.PREMIUM))
                 .collect(Collectors.toMap(DomainType::getDomain, DomainType::getPrice));
 
+        // Map for Top level domains
         Map<String, Double> normal = domainTypes.stream().filter(typ -> typ.getType().equals(Type.NORMAL))
                 .collect(Collectors.toMap(DomainType::getDomain, DomainType::getPrice));
 
-        for (Map.Entry<String, Integer> entry : domains.entrySet()) {
-            System.out.println("Inside entries");
-            if (premium.containsKey(entry.getKey())) {
-                totalPrice = totalPrice + entry.getValue() * premium.get(entry.getKey());
-                System.out.println("Total price");
-            } else if (normal.containsKey(getSuffix(entry.getKey()))) {
-                totalPrice = totalPrice + entry.getValue() * normal.get(getSuffix(entry.getKey()));
-                System.out.println("Total price " + totalPrice);
-            } else {
-                System.out.println(getSuffix(entry.getKey()) + " Not a valid domain name");
-            }
-        }
+        try {
+            for (Map.Entry<String, Integer> entry : domains.entrySet()) {
 
+                // Check whether the domain name belongs to premium domain
+                if (premium.containsKey(entry.getKey()))
+                    totalCost = totalCost + calculatePriceByYear(entry, premium, Type.PREMIUM);
+
+                // Domain doesn't belong to premium domain, so check with TLD
+                else if (normal.containsKey(getSuffix(entry.getKey())))
+                    totalCost = totalCost + calculatePriceByYear(entry, normal, Type.NORMAL);
+
+                else
+                    System.out.println(getSuffix(entry.getKey()) + " Not a valid domain name");
+
+            }
+            System.out.println("\nTotal Cost of the request = " + totalCost);
+        } catch (Exception e) {
+            System.out.println("CSV Format Error");
+        }
+           
     }
 
+    // Fetch public suffixx
     public static String getSuffix(String key) {
         StringBuilder builder = new StringBuilder();
         String suffix = builder.append(".").append(InternetDomainName.from(key).publicSuffix()).toString();
         return suffix;
+    }
+
+    // Calculate and display price for requested years
+    public static double calculatePriceByYear(Map.Entry<String, Integer> entry, Map<String, Double> domainMap,
+            Type type) {
+        Double domainPrice = 0.0;
+        double pricePerYear = 0.0;
+        if (type.equals(Type.PREMIUM)) {
+            pricePerYear = domainMap.get(entry.getKey());
+            domainPrice = entry.getValue() * pricePerYear;
+        } else {
+            pricePerYear = domainMap.get(getSuffix(entry.getKey()));
+            domainPrice = entry.getValue() * pricePerYear;
+        }
+
+        System.out.println("\n" + entry.getKey() + " registered for " + entry.getValue() + " year at $" + pricePerYear
+                + " per year = " + domainPrice);
+        return domainPrice;
     }
 }
