@@ -1,0 +1,34 @@
+[
+    {
+        "zone": ".com",
+        "price": "10",
+        "type": "NORMAL"
+    },
+    {
+        "zone": ".net",
+        "price": "9",
+        "type": "NORMAL"
+    },
+    {
+        "zone": ".com.au",
+        "price": "20",
+        "type": "NORMAL"
+    },
+    {
+        "zone": "apple.com.au",
+        "price": "1000",
+        "type": "PREMIUM"
+    },
+
+    {
+        "zone": "dict.com",
+        "price": "800",
+        "type": "PREMIUM"
+    },
+    {
+        "zone": "education.net",
+        "price": "300",
+        "type": "PREMIUM"
+    }
+]
+
