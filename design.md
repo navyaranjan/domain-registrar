@@ -41,18 +41,34 @@ The following are the steps to calculate the pricing.
 
 ## User Interface
 
-The application should be easy enough to use. One important feature would be to have the ability for the application to be used interactively and in batch mode.
+The application should be easy enough to use. The application will have the following options:
 
-The application will have the following options:
-
-* `-c/--count`: The number of domains the user wish to calculate the price of (used in interactive mode)
-* `-f/--file`: The file containing comma separated list of `<domain>,<years>`
+* `-f/--file`: The file (`CSV`) containing comma separated list of `<domain>,<years>`
 * `-h/--help`: The instructions on how to use the application
 
+Given below is the schema for domain list csv file.
 ```
-$ java -jar build/libs/domain-registrar-all.jar -h
-usage: domain-registrar
- -c <arg>   Number of Domains to Calculate
- -f <arg>   Path of file to parse domain details
- -h         Prints Help
+# file: domainlist.csv
+a-domain.com,1
+another-domain.net,2
+dict.com,5
 ```
+## Sample Execution
+
+* Application run without any options will print the help.
+    ```
+    $ java -jar build/libs/domain-registrar-all.jar
+    usage: java -jar domain-registrar-all.jar
+    -f,--file <arg>   Absolute Path to file containing Domain list
+    -h,--help         Prints this help message
+    ```
+* Application run with a domain list file as argument
+    ```
+    $ java -jar build/libs/domain-registrar-all.jar -f ~/Workspace/domainlist.csv
+        dict.com registration for 5 year at $800.0 per year = 4000.0
+        another-domain.net registration for 2 year at $9.0 per year = 18.0
+        ranjan.com registration for 4 year at $10.0 per year = 40.0
+        a-domain.com registration for 1 year at $10.0 per year = 10.0
+
+        Total Cost of the request = $4068.0
+    ```

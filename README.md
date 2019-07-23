@@ -6,6 +6,8 @@ The application depends on the following libraries:
 * [FasterXML Jackson Databind](https://github.com/FasterXML/jackson-databind)
 * [Johnrengleman Shadow](https://github.com/johnrengelman/shadow)
 * [Google Guava](https://github.com/google/guava)
+* [Apache Commons CLI](https://commons.apache.org/cli/)
+* [Apache Commons CSV](https://github.com/apache/commons-csv)
 
 ## Pre-requisites
 
