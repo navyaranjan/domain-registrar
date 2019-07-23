@@ -48,3 +48,11 @@ The application will have the following options:
 * `-c/--count`: The number of domains the user wish to calculate the price of (used in interactive mode)
 * `-f/--file`: The file containing comma separated list of `<domain>,<years>`
 * `-h/--help`: The instructions on how to use the application
+
+```
+$ java -jar build/libs/domain-registrar-all.jar -h
+usage: domain-registrar
+ -c <arg>   Number of Domains to Calculate
+ -f <arg>   Path of file to parse domain details
+ -h         Prints Help
+```
