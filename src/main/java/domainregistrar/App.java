@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.*;
 public class App {
 
     private List<DomainType> domainTypes = new ArrayList<>();
