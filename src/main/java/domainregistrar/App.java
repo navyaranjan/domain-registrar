@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +32,7 @@ public class App {
         Options options = new Options();
 
         options.addOption("h", "help", false, "Prints this help message");
-        options.addOption("f", "file", true, "Path to file containing Domain list");
-        // options.addOption("c", "count", true, "Number of Domains to Calculate");
+        options.addOption("f", "file", true, "Absolute Path to file containing Domain list");
 
         // Parse options
         CommandLineParser parser = new DefaultParser();
@@ -62,16 +62,14 @@ public class App {
     // method for parsing domain cost list from json file to List using Jackson
     public static void parseDomainCostList() {
         ObjectMapper mapper = new ObjectMapper();
+        
         try {
             InputStream stream = App.class.getResourceAsStream("/domaintypes.json");
             domainTypes = Arrays.asList(mapper.readValue(stream, DomainType[].class));
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading from the cost backend. FileNotFound Exception. Aborting!");
-        } catch (JsonMappingException e) {
-            System.out.println("Could not read from the cost backend. JsonMappingException.Aborting!");
-        } catch (IOException e) {
-            System.out.println("Could not read from the cost backend. IOException. Aborting!");
-        }
+        } catch (Exception e) {
+            // Printing generic error
+            System.out.println("Error reading from the cost backend. Aborting!");
+        } 
 
     }
 
@@ -85,11 +83,20 @@ public class App {
             Reader reader = Files.newBufferedReader(Paths.get(requestFilePath));
             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT);
             for (CSVRecord csvRecord : csvParser) {
-                domains.put(csvRecord.get(0), Integer.parseInt(csvRecord.get(1)));
+                try{
+                    domains.put(csvRecord.get(0), Integer.parseInt(csvRecord.get(1)));
+                }
+                catch(NumberFormatException e){
+                    System.out.println("Skipping: Wrong year field " + csvRecord.get(1) + " for " + csvRecord.get(0));
+                }
             }
 
-        } catch (Exception e) {
-            System.out.println(e);
+        } catch (NoSuchFileException e) {
+            System.out.println("Error: Could not read the domain list file. Please try with absolute path");
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Error: Could not read the domain list file. Please try with absolute path");
+            System.exit(1);
         }
 
         // Map for premium domains
@@ -100,26 +107,23 @@ public class App {
         Map<String, Double> normal = domainTypes.stream().filter(typ -> typ.getType().equals(Type.NORMAL))
                 .collect(Collectors.toMap(DomainType::getDomain, DomainType::getPrice));
 
-        try {
-            for (Map.Entry<String, Integer> entry : domains.entrySet()) {
+        
+        for (Map.Entry<String, Integer> entry : domains.entrySet()) {
 
-                // Check whether the domain name belongs to premium domain
-                if (premium.containsKey(entry.getKey()))
-                    totalCost = totalCost + calculatePriceByYear(entry, premium, Type.PREMIUM);
+            // Check whether the domain name belongs to premium domain
+            if (premium.containsKey(entry.getKey()))
+                totalCost = totalCost + calculatePriceByYear(entry, premium, Type.PREMIUM);
 
-                // Domain doesn't belong to premium domain, so check with TLD
-                else if (normal.containsKey(getSuffix(entry.getKey())))
-                    totalCost = totalCost + calculatePriceByYear(entry, normal, Type.NORMAL);
+            // Domain doesn't belong to premium domain, so check with TLD
+            else if (normal.containsKey(getSuffix(entry.getKey())))
+                totalCost = totalCost + calculatePriceByYear(entry, normal, Type.NORMAL);
 
-                else
-                    System.out.println(getSuffix(entry.getKey()) + " Not a valid domain name");
+            else
+                System.out.println("Skipping: Not a valid domain name: " + entry.getKey());
 
-            }
-            System.out.println("\nTotal Cost of the request = " + totalCost);
-        } catch (Exception e) {
-            System.out.println("CSV Format Error");
         }
-           
+        System.out.println("\nTotal Cost of the request = $" + totalCost);
+
     }
 
     // Fetch public suffixx
@@ -134,6 +138,7 @@ public class App {
             Type type) {
         Double domainPrice = 0.0;
         double pricePerYear = 0.0;
+        
         if (type.equals(Type.PREMIUM)) {
             pricePerYear = domainMap.get(entry.getKey());
             domainPrice = entry.getValue() * pricePerYear;
@@ -142,8 +147,9 @@ public class App {
             domainPrice = entry.getValue() * pricePerYear;
         }
 
-        System.out.println("\n" + entry.getKey() + " registered for " + entry.getValue() + " year at $" + pricePerYear
+        System.out.println(entry.getKey() + " registration for " + entry.getValue() + " year at $" + pricePerYear
                 + " per year = " + domainPrice);
+        
         return domainPrice;
     }
 }
