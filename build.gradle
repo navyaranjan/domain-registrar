@@ -28,10 +28,18 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 
+    //https://mvnrepository.com/artifact/commons-io/commons-io
+    //compile group: 'commons-io', name: 'commons-io', version: '2.6'
+
+    //csv dependency 
+    compile "org.apache.commons:commons-csv:1.5"
+
     // Jackson for JSON parsing
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.8'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.9.8'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.8'
+
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
 }
 
 application {

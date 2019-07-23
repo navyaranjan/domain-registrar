@@ -1,32 +1,32 @@
 [
     {
-        "zone": ".com",
+        "domain": ".com",
         "price": "10",
         "type": "NORMAL"
     },
     {
-        "zone": ".net",
+        "domain": ".net",
         "price": "9",
         "type": "NORMAL"
     },
     {
-        "zone": ".com.au",
+        "domain": ".com.au",
         "price": "20",
         "type": "NORMAL"
     },
     {
-        "zone": "apple.com.au",
+        "domain": "apple.com.au",
         "price": "1000",
         "type": "PREMIUM"
     },
 
     {
-        "zone": "dict.com",
+        "domain": "dict.com",
         "price": "800",
         "type": "PREMIUM"
     },
     {
-        "zone": "education.net",
+        "domain": "education.net",
         "price": "300",
         "type": "PREMIUM"
     }

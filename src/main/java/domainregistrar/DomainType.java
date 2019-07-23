@@ -1,23 +1,29 @@
 package domainregistrar;
 
-public class DomainType {
+import java.io.Serializable;
 
-    private String zone;
+public class DomainType implements Serializable{
+
+    private String domain;
     private double price;
     private Type type;
 
-    public DomainType(String zone, double price, Type type) {
-        this.zone = zone;
+    public DomainType(){
+
+    }
+    public DomainType(String domain, double price, Type type) {
+        this.domain = domain;
         this.price = price;
         this.type = type;
     }
 
-    public String getZone() {
-        return zone;
+
+    public String getDomain() {
+        return domain;
     }
 
-    public void setZone(String zone) {
-        this.zone = zone;
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
     public double getPrice() {
